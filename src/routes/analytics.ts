@@ -21,7 +21,7 @@ router.get('/revenue', async (req, res) => {
 
     // const totalRevenue = reservations.reduce((sum, res) => sum + (res.totalPrice || 0), 0);
     // const totalRevenue = reservations.reduce((sum: number, res) => sum + (res.totalPrice || 0), 0);
-    const totalRevenue = reservations.reduce((sum: number, reservation) => sum + (reservation.totalPrice || 0), 0);
+    const totalRevenue = reservations.reduce((sum: number, reservation: typeof reservations[0]) => sum + (reservation.totalPrice || 0), 0);
 
     // Also get active rooms count
     const activeReservations = await prisma.reservation.count({
