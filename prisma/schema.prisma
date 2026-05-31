@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+}
+
+model Admin {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Room {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  name          String        @unique
+  consoleType   String        // e.g. "PS4", "PS5"
+  hourlyRate    Float
+  discountRate  Float?        
+  discountStart Int?         
+  discountEnd   Int?          
+  reservations  Reservation[]
+  createdAt     DateTime      @default(now())
+}
+
+model Reservation {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  roomId           String   @db.ObjectId
+  room             Room     @relation(fields: [roomId], references: [id])
+  customerName     String?
+  customerPhone    String?
+  transferToNumber String?
+  isOpentime       Boolean  @default(false)
+  startTime        DateTime
+  endTime          DateTime?
+  totalPrice       Float?
+  status           String   @default("pending") // pending, active, completed, cancelled
+  createdAt        DateTime @default(now())
+}

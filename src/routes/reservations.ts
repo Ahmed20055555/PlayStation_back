@@ -1,0 +1,129 @@
+import express from 'express';
+import prisma from '../prismaClient';
+
+const router = express.Router();
+
+// Get all reservations
+router.get('/', async (req, res) => {
+  try {
+    const reservations = await prisma.reservation.findMany({
+      include: { room: true },
+      orderBy: { startTime: 'desc' }
+    });
+    res.json(reservations);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get pending-payment reservations (for dashboard)
+router.get('/pending', async (req, res) => {
+  try {
+    const reservations = await prisma.reservation.findMany({
+      where: { status: 'pending_payment' },
+      include: { room: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(reservations);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Create a reservation (pending_payment by default)
+router.post('/', async (req, res) => {
+  try {
+    const { roomId, customerName, customerPhone, transferToNumber, isOpentime, startTime, endTime } = req.body;
+
+    const room = await prisma.room.findUnique({ where: { id: roomId } });
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+
+    const start = new Date(startTime);
+
+    // Use discount rate if active at this hour
+    const currentHour = start.getHours();
+    let effectiveRate = room.hourlyRate;
+    if (room.discountRate != null && room.discountStart != null && room.discountEnd != null) {
+      const s = room.discountStart;
+      const e = room.discountEnd;
+      const inWindow = s < e
+        ? currentHour >= s && currentHour < e
+        : currentHour >= s || currentHour < e;
+      if (inWindow) effectiveRate = room.discountRate;
+    }
+
+    let totalPrice = 0;
+    let end: Date | null = null;
+
+    if (isOpentime) {
+      totalPrice = effectiveRate; // 1 hour deposit for open time
+    } else {
+      end = new Date(endTime);
+      const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+      totalPrice = hours * effectiveRate;
+    }
+
+    const reservation = await prisma.reservation.create({
+      data: {
+        roomId: roomId,
+        customerName,
+        customerPhone,
+        transferToNumber,
+        isOpentime: isOpentime || false,
+        startTime: start,
+        endTime: end,
+        totalPrice,
+        status: 'pending_payment'
+      }
+    });
+
+    res.status(201).json(reservation);
+  } catch (error) {
+    console.error('POST /reservations error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Confirm payment → set status to active
+router.patch('/:id/confirm-payment', async (req, res) => {
+  try {
+    const reservation = await prisma.reservation.update({
+      where: { id: req.params.id },
+      data: { status: 'active' },
+      include: { room: true }
+    });
+    res.json(reservation);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Reject payment → cancel the reservation
+router.patch('/:id/reject-payment', async (req, res) => {
+  try {
+    const reservation = await prisma.reservation.update({
+      where: { id: req.params.id },
+      data: { status: 'cancelled' },
+      include: { room: true }
+    });
+    res.json(reservation);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Complete/Cancel a reservation
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const reservation = await prisma.reservation.update({
+      where: { id: req.params.id },
+      data: { status }
+    });
+    res.json(reservation);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+export default router;
