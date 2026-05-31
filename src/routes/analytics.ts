@@ -8,7 +8,7 @@ router.get('/revenue', async (req, res) => {
   try {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     // Get all completed reservations for the current month
     const reservations = await prisma.reservation.findMany({
       where: {
@@ -19,8 +19,9 @@ router.get('/revenue', async (req, res) => {
       }
     });
 
-    const totalRevenue = reservations.reduce((sum, res) => sum + (res.totalPrice || 0), 0);
-    
+    // const totalRevenue = reservations.reduce((sum, res) => sum + (res.totalPrice || 0), 0);
+    const totalRevenue = reservations.reduce((sum: number, res) => sum + (res.totalPrice || 0), 0);
+
     // Also get active rooms count
     const activeReservations = await prisma.reservation.count({
       where: { status: 'active' }

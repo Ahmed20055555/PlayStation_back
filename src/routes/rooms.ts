@@ -43,7 +43,7 @@ router.post('/', async (req, res) => {
         name,
         consoleType,
         hourlyRate: Number(hourlyRate),
-        discountRate: discounذtRate !== undefined && discountRate !== null && discountRate !== "" ? Number(discountRate) : null,
+        discountRate: discountRate !== undefined && discountRate !== null && discountRate !== "" ? Number(discountRate) : null,
         discountStart: discountStart !== undefined && discountStart !== null && discountStart !== "" ? Number(discountStart) : null,
         discountEnd: discountEnd !== undefined && discountEnd !== null && discountEnd !== "" ? Number(discountEnd) : null,
       }
