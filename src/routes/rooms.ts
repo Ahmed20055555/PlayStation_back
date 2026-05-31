@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
 // Get a single room
 router.get('/:id', async (req, res) => {
   try {
-    const room = await prisma.room.findUnique({ where: { id: req.params.id } });
+    const room = await prisma.room.findUnique({ where: { id: Number(req.params.id) } });
     if (!room) return res.status(404).json({ message: 'Room not found' });
     res.json(room);
   } catch (error) {
@@ -43,7 +43,7 @@ router.post('/', async (req, res) => {
         name,
         consoleType,
         hourlyRate: Number(hourlyRate),
-        discountRate: discountRate !== undefined && discountRate !== null && discountRate !== "" ? Number(discountRate) : null,
+        discountRate: discounذtRate !== undefined && discountRate !== null && discountRate !== "" ? Number(discountRate) : null,
         discountStart: discountStart !== undefined && discountStart !== null && discountStart !== "" ? Number(discountStart) : null,
         discountEnd: discountEnd !== undefined && discountEnd !== null && discountEnd !== "" ? Number(discountEnd) : null,
       }
@@ -60,7 +60,7 @@ router.put('/:id', async (req, res) => {
   try {
     const { name, consoleType, hourlyRate, discountRate, discountStart, discountEnd } = req.body;
     const room = await prisma.room.update({
-      where: { id: req.params.id },
+      where: { id: Number(req.params.id) },
       data: {
         name,
         consoleType,
@@ -79,7 +79,7 @@ router.put('/:id', async (req, res) => {
 // Delete a room
 router.delete('/:id', async (req, res) => {
   try {
-    const roomId = req.params.id;
+    const roomId = Number(req.params.id);
     // First delete all reservations associated with this room to avoid foreign key constraint errors
     await prisma.reservation.deleteMany({ where: { roomId } });
     // Then delete the room itself
