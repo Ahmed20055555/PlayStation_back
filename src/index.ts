@@ -5,6 +5,7 @@ import authRoutes from './routes/auth';
 import roomsRoutes from './routes/rooms';
 import reservationsRoutes from './routes/reservations';
 import analyticsRoutes from './routes/analytics';
+import settingsRoutes from './routes/settings';
 
 dotenv.config();
 
@@ -26,13 +27,14 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomsRoutes);
 app.use('/api/reservations', reservationsRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/', (req, res) => {
   res.send('PlayStation Lounge API is running');

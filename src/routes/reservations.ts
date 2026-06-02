@@ -33,7 +33,7 @@ router.get('/pending', async (req, res) => {
 // Create a reservation (pending_payment by default)
 router.post('/', async (req, res) => {
   try {
-    const { roomId, customerName, customerPhone, transferToNumber, isOpentime, startTime, endTime } = req.body;
+    const { roomId, customerName, customerPhone, transferToNumber, transferImage, isOpentime, startTime, endTime } = req.body;
 
     const room = await prisma.room.findUnique({ where: { id: roomId } });
     if (!room) return res.status(404).json({ message: 'Room not found' });
@@ -69,6 +69,7 @@ router.post('/', async (req, res) => {
         customerName,
         customerPhone,
         transferToNumber,
+        transferImage,
         isOpentime: isOpentime || false,
         startTime: start,
         endTime: end,
