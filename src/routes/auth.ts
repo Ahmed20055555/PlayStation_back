@@ -7,9 +7,9 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
   try {
-    const admin = await prisma.admin.findUnique({ where: { username } });
+    const admin = await prisma.admin.findUnique({ where: { email } });
     if (!admin) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -19,8 +19,8 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token, username: admin.username });
+    const token = jwt.sign({ id: admin.id, email: admin.email }, JWT_SECRET, { expiresIn: '1d' });
+    res.json({ token, email: admin.email });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -34,13 +34,13 @@ router.post('/setup', async (req, res) => {
       return res.status(400).json({ message: 'Admin already exists' });
     }
     
-    const { username, password } = req.body;
+    const { email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const admin = await prisma.admin.create({
-      data: { username, password: hashedPassword }
+      data: { email, password: hashedPassword }
     });
     
-    res.status(201).json({ message: 'Admin created', username: admin.username });
+    res.status(201).json({ message: 'Admin created', email: admin.email });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
