@@ -107,7 +107,7 @@ router.get('/', async (req, res) => {
         reservations: {
           where: {
             status: {
-              in: ['pending', 'active']
+              in: ['pending', 'pending_payment', 'active']
             }
           }
         }

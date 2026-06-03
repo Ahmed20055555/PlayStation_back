@@ -54,13 +54,34 @@ router.post('/', async (req, res) => {
 
     let totalPrice = 0;
     let end: Date | null = null;
+    let checkEnd: Date; // Used only for overlap validation
 
     if (isOpentime) {
       totalPrice = effectiveRate; // 1 hour deposit for open time
+      checkEnd = new Date(start.getTime() + 12 * 60 * 60 * 1000); // Assume 12h for open time overlap check
     } else {
       end = new Date(endTime);
+      checkEnd = end;
       const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
       totalPrice = hours * effectiveRate;
+    }
+
+    // Backend Overlap Validation
+    const existingReservations = await prisma.reservation.findMany({
+      where: {
+        roomId: roomId,
+        status: { in: ['pending', 'pending_payment', 'active'] }
+      }
+    });
+
+    for (const existingRes of existingReservations) {
+      if (!existingRes.startTime) continue;
+      const resStart = new Date(existingRes.startTime);
+      const resEnd = existingRes.endTime ? new Date(existingRes.endTime) : new Date(resStart.getTime() + 12 * 60 * 60 * 1000);
+      
+      if (start < resEnd && checkEnd > resStart) {
+        return res.status(400).json({ message: 'هذا الوقت يتعارض مع حجز آخر مسجل مسبقاً.' });
+      }
     }
 
     const reservation = await prisma.reservation.create({
