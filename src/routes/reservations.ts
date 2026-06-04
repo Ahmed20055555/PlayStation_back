@@ -30,6 +30,20 @@ router.get('/pending', async (req, res) => {
   }
 });
 
+// Get active reservations (for dashboard)
+router.get('/active', async (req, res) => {
+  try {
+    const reservations = await prisma.reservation.findMany({
+      where: { status: 'active' },
+      include: { room: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(reservations);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Create a reservation (pending_payment by default)
 router.post('/', async (req, res) => {
   try {
