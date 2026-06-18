@@ -10,6 +10,7 @@ import employeesRoutes from './routes/employees';
 import announcementsRoutes from './routes/announcements';
 import attendanceRoutes from './routes/attendance';
 import breakRequestsRoutes from './routes/breakRequests';
+import productsRoutes from './routes/products';
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.use('/api/employees', employeesRoutes);
 app.use('/api/announcements', announcementsRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/break-requests', breakRequestsRoutes);
+app.use('/api/products', productsRoutes);
 
 app.get('/', (req, res) => {
   res.send('PlayStation Lounge API is running');

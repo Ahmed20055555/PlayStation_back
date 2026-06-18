@@ -47,7 +47,7 @@ router.get('/active', async (req, res) => {
 // Create a reservation (pending_payment by default)
 router.post('/', async (req, res) => {
   try {
-    const { roomId, customerName, customerPhone, transferToNumber, transferImage, isOpentime, startTime, endTime } = req.body;
+    const { roomId, customerName, customerPhone, transferToNumber, transferImage, isOpentime, startTime, endTime, items } = req.body;
 
     const room = await prisma.room.findUnique({ where: { id: roomId } });
     if (!room) return res.status(404).json({ message: 'Room not found' });
@@ -70,8 +70,21 @@ router.post('/', async (req, res) => {
     let end: Date | null = null;
     let checkEnd: Date; // Used only for overlap validation
 
+    let snacksTotal = 0;
+    const validatedItems = [];
+    if (items && Array.isArray(items)) {
+      for (const item of items) {
+        validatedItems.push({
+          productId: item.productId,
+          name: item.name,
+          priceAtTime: item.priceAtTime,
+          quantity: item.quantity
+        });
+      }
+    }
+
     if (isOpentime) {
-      totalPrice = effectiveRate; // 1 hour deposit for open time
+      totalPrice = effectiveRate; // 1 hour deposit for open time (Snacks are not included in totalPrice field anymore)
       checkEnd = new Date(start.getTime() + 12 * 60 * 60 * 1000); // Assume 12h for open time overlap check
     } else {
       end = new Date(endTime);
@@ -109,6 +122,7 @@ router.post('/', async (req, res) => {
         startTime: start,
         endTime: end,
         totalPrice,
+        items: validatedItems,
         status: 'pending_payment'
       }
     });
@@ -151,10 +165,15 @@ router.patch('/:id/reject-payment', async (req, res) => {
 // Complete/Cancel a reservation
 router.patch('/:id/status', async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, endTime, finalPrice } = req.body;
+    
+    const updateData: any = { status };
+    if (endTime) updateData.endTime = new Date(endTime);
+    if (finalPrice !== undefined) updateData.totalPrice = finalPrice;
+
     const reservation = await prisma.reservation.update({
       where: { id: req.params.id },
-      data: { status }
+      data: updateData
     });
     res.json(reservation);
   } catch (error) {

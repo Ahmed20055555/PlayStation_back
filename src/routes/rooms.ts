@@ -145,8 +145,11 @@ router.post('/', async (req, res) => {
       }
     });
     res.status(201).json(room);
-  } catch (error) {
+  } catch (error: any) {
     console.error("POST /rooms Error:", error);
+    if (error.code === 'P2002') {
+      return res.status(400).json({ message: 'اسم الغرفة موجود مسبقاً. يرجى اختيار اسم آخر.' });
+    }
     res.status(500).json({ message: 'Server error', error: String(error) });
   }
 });

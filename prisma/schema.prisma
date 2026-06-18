@@ -28,19 +28,37 @@ model Room {
 }
 
 model Reservation {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  roomId           String   @db.ObjectId
-  room             Room     @relation(fields: [roomId], references: [id])
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  roomId           String            @db.ObjectId
+  room             Room              @relation(fields: [roomId], references: [id])
   customerName     String?
   customerPhone    String?
   transferToNumber String?
   transferImage    String?
-  isOpentime       Boolean  @default(false)
+  isOpentime       Boolean           @default(false)
   startTime        DateTime
   endTime          DateTime?
   totalPrice       Float?
-  status           String   @default("pending") // pending, active, completed, cancelled
-  createdAt        DateTime @default(now())
+  items            ReservationItem[]
+  status           String            @default("pending") // pending, active, completed, cancelled
+  createdAt        DateTime          @default(now())
+}
+
+type ReservationItem {
+  productId   String   @db.ObjectId
+  name        String
+  priceAtTime Float
+  quantity    Int
+}
+
+model Product {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  price     Float
+  image     String?
+  category  String   @default("snack")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
 
 model Settings {
